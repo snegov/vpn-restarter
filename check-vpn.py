@@ -18,9 +18,9 @@ def check_connection(remote_host=DEFAULT_REMOTE_HOST) -> bool:
     """ Check internet connection by pinging remote_host """
     ping_proc = subprocess.run(['ping', '-c', '5', remote_host], capture_output=True)
     if ping_proc.stdout:
-        logging.info("Ping stdout:\n%s", ping_proc.stdout.decode().strip())
+        logging.info("ping stdout:\n%s", ping_proc.stdout.decode().strip())
     if ping_proc.stderr:
-        logging.info("Ping stderr:\n%s", ping_proc.stderr.decode().strip())
+        logging.info("ping stderr:\n%s", ping_proc.stderr.decode().strip())
     return ping_proc.returncode == 0
 
 
@@ -144,7 +144,7 @@ def run_vpn_checks(remote_host=DEFAULT_REMOTE_HOST,
 
     logging.info("Checking internet connection")
     if not check_connection(remote_host=remote_host):
-        logging.warning("Remote host is not pingable")
+        logging.warning("Remote host %s is not available through ICMP", remote_host)
         return False
 
     if route_prefix:
