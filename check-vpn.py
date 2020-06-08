@@ -24,13 +24,16 @@ def check_connection(remote_host=DEFAULT_REMOTE_HOST) -> bool:
     return ping_proc.returncode == 0
 
 
-def get_route(remote_host=DEFAULT_REMOTE_HOST):
+def get_first_route(remote_host=DEFAULT_REMOTE_HOST):
     """ Get first route used in tracerouting to remote_host"""
-    out = subprocess.check_output(
-        ['traceroute', '-m', '1', remote_host],
-        stderr=subprocess.DEVNULL
-    ).decode()
-    first_route = out.split()[1]
+    tracert_proc = subprocess.run(
+        ['traceroute', '-m', '1', remote_host], capture_output=True
+    )
+    if tracert_proc.stdout:
+        logging.info("traceroute stdout:\n%s", tracert_proc.stdout.decode().strip())
+    if tracert_proc.stderr:
+        logging.info("traceroute stderr:\n%s", tracert_proc.stderr.decode().strip())
+    first_route = tracert_proc.stdout.decode().split()[1]
     return first_route
 
 
@@ -149,8 +152,10 @@ def run_vpn_checks(remote_host=DEFAULT_REMOTE_HOST,
 
     if route_prefix:
         logging.info("Checking default route")
-        if not get_route().startswith(route_prefix):
-            logging.warning("Route table has no expected default route %s", route_prefix)
+        first_route = get_first_route(remote_host=remote_host)
+        if not first_route.startswith(route_prefix):
+            logging.warning("Incorrect route to host %s (was %s, should be %s)",
+                            remote_host, first_route, route_prefix)
             return False
 
     return True
